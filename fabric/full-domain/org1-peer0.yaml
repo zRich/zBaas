@@ -1,0 +1,107 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: org1-peer0-config
+  namespace: fabric
+data:
+  FABRIC_CFG_PATH: /var/hyperledger/fabric/config
+  FABRIC_LOGGING_SPEC: INFO
+  CORE_PEER_TLS_ENABLED: "true"
+  CORE_PEER_PROFILE_ENABLED: "false"
+  CORE_PEER_TLS_CERT_FILE: /var/hyperledger/fabric/organizations/peerOrganizations/org1.fabric.svc.cluster.local/peers/org1-peer0.fabric.svc.cluster.local/tls/server.crt
+  CORE_PEER_TLS_KEY_FILE: /var/hyperledger/fabric/organizations/peerOrganizations/org1.fabric.svc.cluster.local/peers/org1-peer0.fabric.svc.cluster.local/tls/server.key
+  CORE_PEER_TLS_ROOTCERT_FILE: /var/hyperledger/fabric/organizations/peerOrganizations/org1.fabric.svc.cluster.local/peers/org1-peer0.fabric.svc.cluster.local/tls/ca.crt
+  CORE_PEER_ID: org1-peer0
+  CORE_PEER_ADDRESS: 0.0.0.0:7051
+  CORE_PEER_LISTENADDRESS: 0.0.0.0:7051
+  CORE_PEER_CHAINCODEADDRESS: org1-peer0:7052
+  CORE_PEER_CHAINCODELISTENADDRESS: 0.0.0.0:7052
+  CORE_PEER_GOSSIP_BOOTSTRAP: 0.0.0.0:7051
+  CORE_PEER_GOSSIP_EXTERNALENDPOINT: 0.0.0.0:7051
+  CORE_PEER_LOCALMSPID: Org1MSP
+  CORE_PEER_MSPCONFIGPATH: /var/hyperledger/fabric/organizations/peerOrganizations/org1.fabric.svc.cluster.local/peers/org1-peer0.fabric.svc.cluster.local/msp/
+  CORE_OPERATIONS_LISTENADDRESS: 0.0.0.0:9444
+  CHAINCODE_AS_A_SERVICE_BUILDER_CONFIG: "{\"peername\": \"peer0org1\"}"
+  CORE_CHAINCODE_EXECUTETIMEOUT: 300s
+---  
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: org1-peer0
+  namespace: fabric
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: org1-peer0
+  template:
+    metadata:
+      labels:
+        app: org1-peer0
+    spec:
+      containers:
+      - name: org1-peer0
+        image: hyperledger/fabric-peer:2.4.1
+        imagePullPolicy: IfNotPresent
+        command: ["peer", "node", "start"]
+        # command: ["sh", "-c", "sleep 48h"]
+        envFrom:
+          - configMapRef:
+              name: org1-peer0-config
+        volumeMounts:
+          - name: fabric-volume
+            mountPath: /var/hyperledger/fabric
+          - name: fabric-peer0org1
+            mountPath: /var/hyperledger/production
+      volumes:
+        - name: fabric-volume
+          persistentVolumeClaim:
+            claimName: pvc-fabric
+        - name: fabric-peer0org1
+          persistentVolumeClaim:
+            claimName: pvc-fabric-org1
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: org1-peer0
+  namespace: fabric
+spec:
+  type: ClusterIP
+  selector:
+    app: org1-peer0
+  ports:
+    - name: general
+      port: 7051
+      protocol: TCP
+    - name: chaincode
+      port: 7052
+      protocol: TCP
+    - name: operation
+      port: 9444
+      protocol: TCP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: 60s
+    nginx.ingress.kubernetes.io/ssl-passthrough: "true"
+  labels:
+    app: org1-peer0
+  name: org1-peer0
+  namespace: fabric
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: org1-peer0.fabric.svc.cluster.local
+      http:
+        paths:
+          - backend:
+              service:
+                name: org1-peer0
+                port:
+                  name: general
+            path: /
+            pathType: ImplementationSpecific

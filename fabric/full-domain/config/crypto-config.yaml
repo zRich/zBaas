@@ -1,0 +1,82 @@
+
+# ---------------------------------------------------------------------------
+# "OrdererOrgs" - Definition of organizations managing orderer nodes
+# ---------------------------------------------------------------------------
+OrdererOrgs:
+  # ---------------------------------------------------------------------------
+  # Orderer
+  # ---------------------------------------------------------------------------
+  - Name: Orderer
+    Domain: orderer.fabric.svc.cluster.local
+    EnableNodeOUs: true
+
+    CA:
+       Hostname: ca # implicitly ca.org1.example.com
+       Country: CN
+       Province: Guangdong
+       Locality: Shenzhen
+       OrganizationalUnit: Qirui Info
+       StreetAddress: Futian # default nil
+       PostalCode: 518000 # default nil
+
+    Specs:
+      - Hostname: orderer # implicitly "foo.org1.example.com"
+        CommonName: orderer.fabric.svc.cluster.local # overrides Hostname-based FQDN set above
+        SANS:
+          - "{{.Hostname}}.{{.Domain}}"
+          - "{{.Hostname}}.fabric.svc.cluster.local"
+
+# ---------------------------------------------------------------------------
+# "PeerOrgs" - Definition of organizations managing peer nodes
+# ---------------------------------------------------------------------------
+PeerOrgs:
+  # ---------------------------------------------------------------------------
+  # Org1
+  # ---------------------------------------------------------------------------
+  - Name: Org1
+    Domain: org1.fabric.svc.cluster.local
+    EnableNodeOUs: true
+    
+    CA:
+       Hostname: ca # implicitly ca.org1.example.com
+       Country: CN
+       Province: Guangdong
+       Locality: Shenzhen
+       OrganizationalUnit: Qirui Info
+       StreetAddress: Futian # default nil
+       PostalCode: 518000 # default nil
+    Specs:
+      - Hostname: org1-peer0 # implicitly "foo.org1.example.com"
+        CommonName: org1-peer0.fabric.svc.cluster.local # overrides Hostname-based FQDN set above
+        SANS:
+          - "org1-peer0.{{.Domain}}"
+          - "{{.Hostname}}.fabric.svc.cluster.local"
+    Template:
+      Count: 1
+    Users:
+      Count: 1
+
+  # ---------------------------------------------------------------------------
+  # Org2: See "Org1" for full specification
+  # ---------------------------------------------------------------------------
+  - Name: Org2
+    Domain: org2.fabric.svc.cluster.local
+    EnableNodeOUs: true
+    CA:
+       Hostname: ca # implicitly ca.org1.example.com
+       Country: CN
+       Province: Guangdong
+       Locality: Shenzhen
+       OrganizationalUnit: Qirui Info
+       StreetAddress: Futian # default nil
+       PostalCode: 518000 # default nil
+    Specs:
+      - Hostname: org2-peer0 # implicitly "foo.org1.example.com"
+        CommonName: org2-peer0.fabric.svc.cluster.local # overrides Hostname-based FQDN set above
+        SANS:
+          - "org2-peer0.{{.Domain}}"
+          - "{{.Hostname}}.fabric.svc.cluster.local"
+    Template:
+      Count: 1
+    Users:
+      Count: 1

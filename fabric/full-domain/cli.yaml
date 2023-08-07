@@ -1,0 +1,44 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cli-config
+  namespace: fabric
+data:
+  GOPATH: /opt/gopath
+  FABRIC_LOGGING_SPEC: INFO
+  FABRIC_CFG_PATH: /var/hyperledger/fabric/config
+  ORDERER_CA: /var/hyperledger/fabric/organizations/ordererOrganizations/orderer.fabric.svc.cluster.local/tlsca/tlsca.orderer.fabric.svc.cluster.local-cert.pem
+  ORDERER_ADMIN_TLS_SIGN_CERT: /var/hyperledger/fabric/organizations/ordererOrganizations/orderer.fabric.svc.cluster.local/orderers/orderer.fabric.svc.cluster.local/tls/server.crt
+  ORDERER_ADMIN_TLS_PRIVATE_KEY: /var/hyperledger/fabric/organizations/ordererOrganizations/orderer.fabric.svc.cluster.local/orderers/orderer.fabric.svc.cluster.local/tls/server.key
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fabric-cli
+  namespace: fabric
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fabric-cli
+  template:
+    metadata:
+      labels:
+        app: fabric-cli
+    spec:
+      containers:
+      - name: fabric-cli
+        image: hyperledger/fabric-tools:2.4.1
+        imagePullPolicy: IfNotPresent
+        command: ["bash", "-c", "sleep 48h"]
+        envFrom:
+          - configMapRef:
+              name: cli-config
+        volumeMounts:
+          - name: fabric-volume
+            mountPath: /var/hyperledger/fabric
+      volumes:
+        - name: fabric-volume
+          persistentVolumeClaim:
+            claimName: pvc-fabric
