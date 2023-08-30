@@ -1,0 +1,52 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pvc-fabric
+  namespace: fabric
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: nfs-fabric
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pvc-fabric-orderer
+  namespace: fabric
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: nfs-fabric
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pvc-fabric-org1
+  namespace: fabric
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: nfs-fabric
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pvc-fabric-org2
+  namespace: fabric
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: nfs-fabric
+  resources:
+    requests:
+      storage: 1Gi

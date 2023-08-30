@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chain1-node1
+  namespace: chainmaker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: chain1-node1
+  template:
+    metadata:
+      labels:
+        app: chain1-node1
+    spec:
+      containers:
+      - name: chain1-node1
+        image: "chainmakerofficial/chainmaker:v2.3.0"
+        imagePullPolicy: IfNotPresent
+        # command: ["peer", "node", "start"]
+        command: ["sh", "-c", "sleep 48h"]
+        volumeMounts:
+          - name: chain1-node1-data-pvc
+            mountPath: /chainmaker-go/data
+          - name: chain1-node1-log-pvc
+            mountPath: /chainmaker-go/log
+      volumes:
+        - name: chain1-node1-data-pvc
+          persistentVolumeClaim:
+            claimName: chain1-node1-data-pvc
+        - name: chain1-node1-log-pvc
+          persistentVolumeClaim:
+            claimName: chain1-node1-log-pvc

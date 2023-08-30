@@ -33,7 +33,6 @@ metadata:
   name: orderer
   namespace: fabric
 spec:
-  subdomain: orderer
   replicas: 1
   selector:
     matchLabels:
