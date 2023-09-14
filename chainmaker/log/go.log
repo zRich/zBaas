@@ -1,0 +1,45 @@
+2023-09-13 13:47:40.696	[WARN]	[Manager]	dockervm/main.go:28	failed to init config, failed to read conf open /mount/config/vm.yml: no such file or directory, use default configs, failed to set config env, <nil>, use default config
+2023-09-13 13:47:40.696	[DEBUG]	[Contract Manager]	core/contract_manager.go:325	set contract dir: /mount/contract-bins
+2023-09-13 13:47:40.696	[DEBUG]	[Contract Manager]	core/contract_manager.go:147	init contract LRU with size [0]
+2023-09-13 13:47:40.696	[DEBUG]	[Contract Manager]	core/contract_manager.go:65	start contract manager routine
+2023-09-13 13:47:40.697	[DEBUG]	[Process Manager]	core/process_manager.go:88	start process manager routine
+2023-09-13 13:47:40.697	[DEBUG]	[Process Manager]	core/process_manager.go:88	start process manager routine
+2023-09-13 13:47:40.697	[DEBUG]	[Manager]	module/manager.go:63	init grpc server, max send size [100M], max recv size[100M]
+2023-09-13 13:47:40.697	[INFO]	[Chain RPC Server]	rpc/contract_engine_chain_server.go:58	new chain rpc server(TCP) :22351
+2023-09-13 13:47:40.710	[INFO]	[Sandbox RPC Server]	rpc/contract_engine_sandbox_server.go:46	new sandbox rpc server(UDS) /sandbox/sandbox.sock
+2023-09-13 13:47:40.712	[INFO]	[Manager]	module/manager.go:79	start chain rpc server
+2023-09-13 13:47:40.712	[INFO]	[Chain RPC Server]	rpc/contract_engine_chain_server.go:124	start chain rpc server
+2023-09-13 13:47:40.712	[INFO]	[Sandbox RPC Server]	rpc/contract_engine_sandbox_server.go:113	start sandbox rpc server
+2023-09-13 13:47:40.712	[DEBUG]	[Request Scheduler]	core/request_scheduler.go:82	start request scheduler routine
+2023-09-13 13:47:40.715	[DEBUG]	[Manager]	dockervm/main.go:46	docker manager created
+2023-09-13 13:47:40.715	[DEBUG]	[Manager]	dockervm/main.go:51	docker manager initialized
+2023-09-13 13:47:40.716	[DEBUG]	[Security Env]	security/security_center.go:47	init security env completed
+2023-09-13 13:47:40.716	[INFO]	[Manager]	module/manager.go:134	docker vm start successfully
+2023-09-13 13:47:48.947	[INFO]	[Chain RPC Service]	rpc/contract_engine_chain_service.go:80	new chain rpc connection
+2023-09-13 13:47:48.947	[DEBUG]	[Chain RPC Service]	rpc/contract_engine_chain_service.go:148	start send msg routine
+2023-09-13 13:47:48.947	[INFO]	[Chain RPC Service]	rpc/contract_engine_chain_service.go:80	new chain rpc connection
+2023-09-13 13:47:48.947	[DEBUG]	[Chain RPC Service]	rpc/contract_engine_chain_service.go:148	start send msg routine
+2023-09-13 13:47:48.947	[DEBUG]	[Chain RPC Service]	rpc/contract_engine_chain_service.go:101	start recv msg routine...
+2023-09-13 13:47:48.947	[DEBUG]	[Chain RPC Service]	rpc/contract_engine_chain_service.go:101	start recv msg routine...
+2023-09-13 13:47:48.984	[INFO]	[Chain RPC Service]	rpc/contract_engine_chain_service.go:80	new chain rpc connection
+2023-09-13 13:47:48.984	[DEBUG]	[Chain RPC Service]	rpc/contract_engine_chain_service.go:148	start send msg routine
+2023-09-13 13:47:48.984	[DEBUG]	[Chain RPC Service]	rpc/contract_engine_chain_service.go:101	start recv msg routine...
+2023-09-13 13:47:48.984	[INFO]	[Chain RPC Service]	rpc/contract_engine_chain_service.go:80	new chain rpc connection
+2023-09-13 13:47:48.984	[DEBUG]	[Chain RPC Service]	rpc/contract_engine_chain_service.go:148	start send msg routine
+2023-09-13 13:47:48.984	[DEBUG]	[Chain RPC Service]	rpc/contract_engine_chain_service.go:101	start recv msg routine...
+2023-09-13 13:47:49.079	[INFO]	[Chain RPC Service]	rpc/contract_engine_chain_service.go:80	new chain rpc connection
+2023-09-13 13:47:49.099	[DEBUG]	[Chain RPC Service]	rpc/contract_engine_chain_service.go:148	start send msg routine
+2023-09-13 13:47:49.115	[DEBUG]	[Chain RPC Service]	rpc/contract_engine_chain_service.go:101	start recv msg routine...
+2023-09-13 13:48:04.191	[DEBUG]	[User Controller]	core/user_manager.go:151	failed to create user [&{Uid:10038 Gid:10038 UserName:u-10038 SockPath:/sandbox/sandbox.sock}], err: [exit status 1, useradd: cannot lock /etc/passwd; try again later.
+] and begin to retry
+2023-09-13 13:48:04.272	[DEBUG]	[User Controller]	core/user_manager.go:151	failed to create user [&{Uid:10020 Gid:10020 UserName:u-10020 SockPath:/sandbox/sandbox.sock}], err: [exit status 1, useradd: cannot lock /etc/passwd; try again later.
+] and begin to retry
+2023-09-13 13:48:04.273	[DEBUG]	[User Controller]	core/user_manager.go:151	failed to create user [&{Uid:10044 Gid:10044 UserName:u-10044 SockPath:/sandbox/sandbox.sock}], err: [exit status 1, useradd: cannot lock /etc/passwd; try again later.
+] and begin to retry
+2023-09-13 13:48:04.302	[DEBUG]	[User Controller]	core/user_manager.go:151	failed to create user [&{Uid:10081 Gid:10081 UserName:u-10081 SockPath:/sandbox/sandbox.sock}], err: [exit status 1, useradd: cannot lock /etc/passwd; try again later.
+] and begin to retry
+2023-09-13 13:48:04.905	[INFO]	[User Controller]	core/user_manager.go:81	init uids succeed, time: [24.18836719s], total user num: [120]
+2023-09-13 13:57:40.716	[DEBUG]	[Process Manager]	core/process_manager.go:390	handle periodic clean idle processes
+2023-09-13 13:57:40.716	[DEBUG]	[Process Manager]	core/process_manager.go:400	there are enough idle processes
+2023-09-13 13:57:40.716	[DEBUG]	[Process Manager]	core/process_manager.go:390	handle periodic clean idle processes
+2023-09-13 13:57:40.716	[DEBUG]	[Process Manager]	core/process_manager.go:400	there are enough idle processes

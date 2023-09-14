@@ -1,0 +1,74 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  namespace: chainmaker
+  name: blockchain-database-pvc
+  labels:
+    app: blockchain-database
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 18Gi
+  storageClassName: blockchain-database-sc
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: blockchain-database
+  namespace: chainmaker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: blockchain-database
+  template:
+    metadata:
+      labels:
+        app: blockchain-database
+    spec:
+      containers:
+      - name: mysql
+        image: mysql:5.7
+        imagePullPolicy: IfNotPresent
+        args:
+          - "--character-set-server=utf8mb4"
+          - "--collation-server=utf8mb4_unicode_ci"
+          - "--max_allowed_packet=200M"
+        volumeMounts:
+        - name: blockchain-database-volume
+          mountPath: /var/lib/mysql
+        ports:
+        - containerPort: 3306
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          value: "Baec&chainmaker"
+        - name: MYSQL_DATABASE
+          value: "chainmaker_dev"
+        - name: MYSQL_USER
+          value: "chainmaker"
+        - name: MYSQL_PASSWORD
+          value: "Baec&chainmaker"
+      volumes:
+      - name: blockchain-database-volume
+        persistentVolumeClaim:
+          claimName: blockchain-database-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: blockchain-database-svc
+  labels:
+    app: blockchain-database-svc
+  namespace: chainmaker
+spec:
+  type: NodePort
+  ports:
+    - port: 3306
+      targetPort: 3306
+      protocol: TCP
+      nodePort: 32306
+  selector:
+    app: blockchain-database

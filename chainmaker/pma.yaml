@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: blockchain-database-pma
+  namespace: chainmaker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: blockchain-database-pma
+  template:
+    metadata:
+      labels:
+        app: blockchain-database-pma
+    spec:
+      containers:
+      - name: blockchain-database-pma
+        image: phpmyadmin:5.2.1
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 80
+        env:
+        - name: PMA_HOST
+          value: "blockchain-database-svc"
+        - name: PMA_PORT
+          value: "3306"
+        - name: MYSQL_ROOT_PASSWORD
+          value: "Baec&chainmaker"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: blockchain-database-pma-svc
+  labels:
+    app: blockchain-database-pma-svc
+  namespace: chainmaker
+spec:
+  type: NodePort
+  ports:
+    - port: 80
+      targetPort: 80
+      protocol: TCP
+      nodePort: 32380
+  selector:
+    app: blockchain-database-pma      

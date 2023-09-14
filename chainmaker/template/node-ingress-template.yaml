@@ -5,17 +5,17 @@ metadata:
     nginx.ingress.kubernetes.io/proxy-connect-timeout: 60s
     nginx.ingress.kubernetes.io/ssl-passthrough: "true"
   labels:
-    app: {chainid}-{nodeid}
-  name: {chainid}-{nodeid}
+    app: {orgid}-{nodename}
+  name: {orgid}-{nodeid}
 spec:
   ingressClassName: nginx
   rules:
-    - host: {chainid}-{nodeid}.${DOMAIN}
+    - host: {orgid}-{nodeid}.${DOMAIN}
       http:
         paths:
           - backend:
               service:
-                name: {chainid}-{nodeid}-grpc
+                name: {orgid}-{nodeid}-grpc
                 port:
                   name: grpc
             path: /
