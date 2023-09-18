@@ -32,13 +32,14 @@ spec:
       - name: chainmaker-console
         image: richzhao/chainmaker-console:v2.3.1
         imagePullPolicy: IfNotPresent
-        # command: ["/chainmaker-console/chainmaker-console.bin"]
-        # args: ["-config", "/chainmaker-console/configs/config.yml"]
         volumeMounts:
         - name: chainmaker-cert-volume
           mountPath: /chainmaker/cert
         - name: chainmaker-console-config-volume
           mountPath: /chainmaker-console/configs
+          readOnly: true
+        - name: kube-config-volume
+          mountPath: /root/.kube
           readOnly: true
         ports:
         - containerPort: 9999
@@ -53,6 +54,9 @@ spec:
       - name: chainmaker-console-config-volume
         configMap:
           name: chainmaker-console-config
+      - name: kube-config-volume
+        configMap:
+          name: kube-config
 ---
 apiVersion: v1
 kind: Service
@@ -68,5 +72,11 @@ spec:
       targetPort: 80
       protocol: TCP
       nodePort: 30280
+      name: http
+    - port: 9999
+      targetPort: 9999
+      protocol: TCP
+      nodePort: 30299
+      name: backend
   selector:
     app: chainmaker-console
