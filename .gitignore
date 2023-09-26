@@ -1,0 +1,4 @@
+.DS_Store
+
+# 所有以log结尾的文件
+*.log
