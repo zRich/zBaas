@@ -1,0 +1,142 @@
+version: "3"
+
+networks:
+  lab:
+    name: fisco
+
+services:
+  fisco-bcos:
+    image: richzhao/fisco-boost:v1.0.0
+    container_name: fisco-bcos
+    networks:
+      - lab
+    volumes:
+      - ./manifest:/fisco/nodes
+    # start fisco-bcos, 启动之后不用结束容器运行，否则会导致fisco-bcos节点停止
+    entrypoint: ["bash", "-c", "cd /fisco/nodes/127.0.0.1 && ./start_all.sh && tail -f /dev/null"]    
+  
+  webase-front:
+    image: richzhao/webase-front:v1.0.0
+    container_name: webase-front-5002
+    networks:
+      - lab
+    environment:
+      # SPRING_PROFILES_ACTIVE: docker
+      SERVER_PORT: 5002
+      SDK_IP: fisco-bcos
+      SDK_CHANNEL_PORT: 20200
+      KEY_SERVER: webase-sign:5004
+    ports:
+      - "5002:5002"
+    volumes:
+      - ./manifest/127.0.0.1/sdk:/dist/sdk
+      - ./manifest:/fisco/nodes
+      - ./demo/webase-front/log:/dist/log
+      - ./demo/webase-front/h2:/h2
+      - ./script/wait-for-it.sh:/wait-for-it.sh # chmod +x wait-for-it.sh
+      - ./script/front-start.sh:/start.sh
+    depends_on:
+      - webase-sign
+    # entrypoint: ["/wait-for-it.sh", "fisco-bcos:20200", "--timeout=10", "--strict", "--",  "bash", "/start.sh"]
+    entrypoint: ["bash", "-c", "sleep 15s; /start.sh"]
+  
+  webase-node-mgr:
+    image: webasepro/webase-node-mgr:v1.5.5
+    container_name: webase-node-mgr-5001
+    ports:
+      - "5001:5001"
+    networks:
+      - lab
+    environment:
+      # SPRING_PROFILES_ACTIVE: docker
+      WEBASE_SIGN_IP: webase-sign:5004
+      SERVER_PORT: 5001
+      WEBASE_DB_IP: mysql
+      WEBASE_DB_PORT: 3306
+      WEBASE_DB_NAME: webasenodemanager
+      WEBASE_DB_UNAME: root
+      WEBASE_DB_PWD: fisco-webase
+      ENCRYPT_TYPE: 0
+    volumes:
+      - ./demo/webase-node-mgr/log:/dist/log
+      - ./manifest/webase/webase-node/application.yml:/dist/conf/application.yml
+      - ./script/wait-for-it.sh:/wait-for-it.sh
+      - ./script/mgr-start.sh:/start.sh
+    depends_on:
+      - mysql
+      - webase-sign
+      - webase-front
+    # entrypoint: ["/wait-for-it.sh", "mysql:3306", "--timeout=5", "--strict", "--", "bash", "/start.sh"]
+    entrypoint: ["bash", "-c", "sleep 30s; /start.sh"]
+
+  webase-sign:
+    image: webasepro/webase-sign:v1.5.5
+    container_name: webase-sign-5004
+    networks:
+      - lab
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SERVER_PORT: 5004
+      WEBASE_DB_IP: mysql
+      WEBASE_DB_PORT: 3306
+      WEBASE_DB_NAME: webasesign
+      WEBASE_DB_UNAME: root
+      WEBASE_DB_PWD: fisco-webase      
+    volumes:
+      - ./demo/webase-sign/log:/dist/log
+      - ./script/wait-for-it.sh:/wait-for-it.sh    
+      - ./script/sign-start.sh:/start.sh
+    depends_on:
+      - mysql
+    # entrypoint: ["/wait-for-it.sh", "mysql:3306", "--timeout=5", "--strict", "--", "bash", "/start.sh"]
+    entrypoint: ["bash", "-c", "sleep 30s; /start.sh"]
+
+  webase-web:
+    # image: richzhao/fisco-bcos-console:v1.5.5
+    image: webasepro/webase-web:v1.5.5
+    container_name: webase-web-5000
+    networks:
+      - lab
+    volumes:
+      # - ./demo/nginx.conf:/data/webase-web/nginx/nginx.conf
+      - ./manifest/webase/webase-web/nginx.conf:/data/webase-web/nginx/nginx.conf
+      # - ./manifest/webase/webase-web/nginx.conf:/etc/nginx/nginx.conf
+      - ./demo/nginx/log:/usr/share/nginx/log
+      - ./demo/webase-web/log:/dist/log
+      - ./script/wait-for-it.sh:/wait-for-it.sh
+      - ./script/web-start.sh:/start.sh
+    # 对外暴露的端口
+    ports:
+      - "5000:5000"
+    depends_on:
+      - webase-node-mgr
+    # entrypoint: ["/wait-for-it.sh", "webase-node-mgr:5001", "--timeout=30", "--", "bash", "/start.sh"]
+    entrypoint: ["bash", "-c", "sleep 15s; /start.sh"]
+
+  mysql:
+    image: mysql:5.7
+    networks:
+      - lab
+    environment:
+      MYSQL_ROOT_PASSWORD: fisco-webase
+    ports:
+      - "3306:3306"
+    container_name: mysql-webase-23306
+    command: ['mysqld', '--character-set-server=utf8mb4', '--collation-server=utf8mb4_unicode_ci', '--max_allowed_packet=200M']
+    volumes:
+    - ./demo/mysql/data:/var/lib/mysql
+  
+  phpMyAdmin:
+    image: phpmyadmin:5.2.1
+    container_name: pma
+    depends_on:
+      - mysql
+    environment:
+      PMA_ARBITRARY: 1
+      PMA_HOST: mysql
+      MYSQL_ROOT_PASSWORD: fisco-webase
+    restart: always
+    ports:
+      - 8080:80
+    networks:
+      - lab

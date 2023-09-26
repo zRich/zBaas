@@ -1,0 +1,152 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webase-database
+  namespace: fisco
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: webase-database
+  template:
+    metadata:
+      labels:
+        app: webase-database
+    spec:
+      containers:
+      - name: mysql
+        image: mysql:5.7
+        imagePullPolicy: IfNotPresent
+        args:
+          - "--character-set-server=utf8mb4"
+          - "--collation-server=utf8mb4_unicode_ci"
+          - "--max_allowed_packet=200M"
+        volumeMounts:
+        - name: webase-database-volume
+          mountPath: /var/lib/mysql
+        ports:
+        - containerPort: 3306
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          value: "webase"
+      - name: webase-database-web
+        image: richzhao/fisco-database-web:v1.0.0
+        ports:
+        - containerPort: 5002
+        environment:
+        - name: SDK_IP
+          value: "127.0.0.1"
+        - name: SPRING_PROFILES_ACTIVE
+          value: "docer"
+        - name: SERVER_PORT
+          value: "5002"
+        - name: SDK_CHANNEL_PORT
+          value: "20200"
+        - name: KEY_SERVER
+          value: "127.0.0.1:5004"
+      - name: webase-node-mgr
+        image: webasepro/webase-node-mgr:v0.0.2
+        environment:
+        - name: SPRING_PROFILES_ACTIVE
+          value: "docker"
+        - name: SERVER_PORT
+          value: "5001"
+        - name: WEBASE_DB_IP
+          value: "127.0.0.1"
+        - name: WEBASE_DB_PORT
+          value: "3306"
+        - name: WEBASE_DB_NAME
+          value: "webasenodemanager"
+        - name: WEBASE_DB_UNAME
+          value: "webase"
+        - name: WEBASE_DB_PWD
+          value: "webase"
+        - name: ENCRYPT_TYPE
+          value: "0"
+        command: ["/bin/sh","-c"]
+        args: ["/wait-for-it.sh", "mgrDbIp:mgrDbPort", "--timeout=5", "--strict", "--", "bash", "/start.sh"]
+      - name: webase-sign
+        image: webasepro/webase-sign:v0.0.2
+        environment:
+        - name: SPRING_PROFILES_ACTIVE
+          value: "docker"
+        - name: SERVER_PORT
+          value: "5004"
+        - name: WEBASE_SIGN_IP
+          value: "127.0.0.1"
+        - name: WEBASE_DB_PORT
+          value: "3306"
+        - name: WEBASE_DB_NAME
+          value: "webasesign"
+        - name: WEBASE_DB_UNAME
+          value: "webase"
+        - name: WEBASE_DB_PWD
+          value: "webase"
+        command: ["/bin/sh","-c"]
+        args: ["/wait-for-it.sh", "mgrDbIp:mgrDbPort", "--timeout=5", "--strict", "--", "bash", "/start.sh"]
+      volumes:
+      - name: webase-database-volume
+        persistentVolumeClaim:
+          claimName: webase-database-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: webase-database-svc
+  labels:
+    app: webase-database-svc
+  namespace: fisco
+spec:
+  type: NodePort
+  ports:
+    - port: 3306
+      targetPort: 3306
+      protocol: TCP
+      nodePort: 32306
+  selector:
+    app: webase-database
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chainmaker-console
+  namespace: fisco
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: chainmaker-console
+  template:
+    metadata:
+      labels:
+        app: chainmaker-console
+    spec:
+      containers:
+      - name: chainmaker-console
+        image: richzhao/chainmaker-console:v2.3.1
+        imagePullPolicy: IfNotPresent
+        volumeMounts:
+        - name: chainmaker-cert-volume
+          mountPath: /chainmaker/cert
+        - name: chainmaker-console-config-volume
+          mountPath: /chainmaker-console/configs
+          readOnly: true
+        - name: kube-config-volume
+          mountPath: /root/.kube
+          readOnly: true
+        ports:
+        - containerPort: 9999
+      - name: chainmaker-console-web
+        image: richzhao/chainmaker-console-web:v2.3.1
+        ports:
+        - containerPort: 80
+      volumes:
+      - name: chainmaker-cert-volume
+        persistentVolumeClaim:
+          claimName: chainmaker-cert-pvc
+      - name: chainmaker-console-config-volume
+        configMap:
+          name: chainmaker-console-config
+      - name: kube-config-volume
+        configMap:
+          name: kube-config

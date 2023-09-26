@@ -1,0 +1,6 @@
+services:
+  fisco-bcos:
+    image: richzhao/fisco-boost:v1.0.0
+    container_name: fisco-bcos
+    volumes:
+      - ./manifest:/fisco/nodes
