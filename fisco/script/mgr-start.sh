@@ -1,9 +1,26 @@
 #!/usr/bin/env bash
 
-sed -i "s/  webaseSignAddress: .*/  webaseSignAddress: ${WEBASE_SIGN_IP}/g" /dist/conf/application-docker.yml
+# sed -i "s/  webaseSignAddress: .*/  webaseSignAddress: ${WEBASE_SIGN_IP}/g" /dist/conf/application-docker.yml
 
-echo "application-docker.yml"
-cat /dist/conf/application-docker.yml
+# echo "application-docker.yml"
+# cat /dist/conf/application-docker.yml
+
+#使用nsloopup命令获取主机 webase-sign 的ip 地址
+WEBASE_SIGN_IP=`nslookup webase-sign | grep Address | tail -n 1 | awk '{print $2}'`
+# 截取 WEBASE_SIGN_IP 中#号之前的字符串
+WEBASE_SIGN_IP=${WEBASE_SIGN_IP%#*}
+
+export WEBASE_SIGN_IP=${WEBASE_SIGN_IP}:5004
+
+#使用nsloopup命令获取主机 webase-sign 的ip 地址
+WEBASE_DB_IP=`nslookup mysql | grep Address | tail -n 1 | awk '{print $2}'`
+# 截取 WEBASE_SIGN_IP 中#号之前的字符串
+WEBASE_DB_IP=${WEBASE_DB_IP%#*}
+
+export WEBASE_DB_IP=${WEBASE_DB_IP}
+
+echo "WEBASE_DB_IP is ${WEBASE_DB_IP}"
+echo "WEBASE_SIGN_IP is ${WEBASE_SIGN_IP}"
 
 # sql start with
 # mysql -u${WEBASE_DB_UNAME} -p${WEBASE_DB_PWD} -h${WEBASE_DB_IP} -P${WEBASE_DB_PORT} -e 'use ${WEBASE_DB_NAME}'
@@ -15,6 +32,8 @@ useCommand="use ${WEBASE_DB_NAME}"
 createCommand="create database ${WEBASE_DB_NAME} default character set utf8"
 # echo "run command: [mysql -u${WEBASE_DB_UNAME} -p${WEBASE_DB_PWD} -h${WEBASE_DB_IP} -P${WEBASE_DB_PORT} -e ${useCommand}]"
 # echo "run command: [mysql -u${WEBASE_DB_UNAME} -p${WEBASE_DB_PWD} -h${WEBASE_DB_IP} -P${WEBASE_DB_PORT} -e ${createCommand}]"
+
+sleep 5s
 
 while true ; do
     #command

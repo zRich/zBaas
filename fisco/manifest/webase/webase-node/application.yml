@@ -36,7 +36,7 @@ spring:
 logging:
   config: classpath:log/log4j2.xml
   level:
-    com.webank.webase.node.mgr: debug
+    com.webank.webase.node.mgr: info
 
 #constants
 constant:
@@ -146,4 +146,3 @@ scheduler:
   threadNamePrefix: "node-mgr-task-"
   awaitTerminationSeconds: 600
   waitForTasksToCompleteOnShutdown: true
-
