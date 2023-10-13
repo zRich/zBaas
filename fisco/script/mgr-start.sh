@@ -19,8 +19,16 @@ WEBASE_DB_IP=${WEBASE_DB_IP%#*}
 
 export WEBASE_DB_IP=${WEBASE_DB_IP}
 
+#使用nsloopup命令获取主机 webase-sign 的ip 地址
+WEBASE_FRONT_IP=`nslookup mysql | grep Address | tail -n 1 | awk '{print $2}'`
+# 截取 WEBASE_SIGN_IP 中#号之前的字符串
+WEBASE_FRONT_IP=${WEBASE_FRONT_IP%#*}
+
+export WEBASE_FRONT_IP=${WEBASE_FRONT_IP}
+
 echo "WEBASE_DB_IP is ${WEBASE_DB_IP}"
 echo "WEBASE_SIGN_IP is ${WEBASE_SIGN_IP}"
+echo "WEBASE_FRONT_IP is ${WEBASE_FRONT_IP}"
 
 # sql start with
 # mysql -u${WEBASE_DB_UNAME} -p${WEBASE_DB_PWD} -h${WEBASE_DB_IP} -P${WEBASE_DB_PORT} -e 'use ${WEBASE_DB_NAME}'
@@ -33,7 +41,8 @@ createCommand="create database ${WEBASE_DB_NAME} default character set utf8"
 # echo "run command: [mysql -u${WEBASE_DB_UNAME} -p${WEBASE_DB_PWD} -h${WEBASE_DB_IP} -P${WEBASE_DB_PORT} -e ${useCommand}]"
 # echo "run command: [mysql -u${WEBASE_DB_UNAME} -p${WEBASE_DB_PWD} -h${WEBASE_DB_IP} -P${WEBASE_DB_PORT} -e ${createCommand}]"
 
-sleep 5s
+# wait for mysql to start
+sleep 15s
 
 while true ; do
     #command

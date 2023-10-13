@@ -1,0 +1,71 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ca-orderer
+  namespace: fabric
+spec:
+  selector:
+    matchLabels:
+      app: ca-orderer
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: ca-orderer
+    spec:
+      volumes:
+        - name: fabric-ca-volume
+          persistentVolumeClaim:
+            claimName: fabric-ca-pvc
+        - name: fabric-ca-config-volume
+          configMap:
+            name: fabric-ca-config-cm
+      containers:
+        - name: ca-orderer
+          image: hyperledger/fabric-ca:1.5.7
+          imagePullPolicy: "IfNotPresent"
+          command:
+            [
+              "fabric-ca-server",
+              "start",
+              "-b",
+              "admin:adminpw",
+              "--port",
+              "10054",
+              "-d",
+            ]
+          resources:
+            requests:
+              memory: "300Mi"
+              cpu: "300m"
+            limits:
+              memory: "500Mi"
+              cpu: "350m"
+          env:
+            - name: FABRIC_CA_SERVER_CA_NAME
+              value: ca-orderer
+            - name: FABRIC_CA_SERVER_TLS_ENABLED
+              value: "true"
+          volumeMounts:
+            - name: fabric-ca-volume
+              mountPath: /etc/hyperledger/fabric-ca-server
+              subPath: organizations/fabric-ca/ordererOrg
+            - name: fabric-ca-config-volume
+              mountPath: /etc/hyperledger/fabric-ca-server/fabric-ca-server-config.yaml
+              subPath: orderer-config.yaml
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ca-orderer
+  namespace: fabric
+  labels:
+    app: ca-orderer
+spec:
+  type: ClusterIP
+  selector:
+    app: ca-orderer
+  ports:
+    - protocol: TCP
+      targetPort: 10054
+      port: 10054

@@ -10,6 +10,8 @@ createCommand="create database ${WEBASE_DB_NAME} default character set utf8;"
 # echo "run command: [mysql -u${WEBASE_DB_UNAME} -p${WEBASE_DB_PWD} -h${WEBASE_DB_IP} -P${WEBASE_DB_PORT} -e ${useCommand}]"
 # echo "run command: [mysql -u${WEBASE_DB_UNAME} -p${WEBASE_DB_PWD} -h${WEBASE_DB_IP} -P${WEBASE_DB_PORT} -e ${createCommand}]"
 
+# wait for mysql to start
+sleep 10s
 
 while true ; do
     #command

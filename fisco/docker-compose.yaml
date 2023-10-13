@@ -67,7 +67,7 @@ services:
       - webase-sign
       - webase-front
     # entrypoint: ["/wait-for-it.sh", "mysql:3306", "--timeout=5", "--strict", "--", "bash", "/start.sh"]
-    entrypoint: ["bash", "-c", "sleep 5s; /start.sh"]
+    entrypoint: ["sh", "-c", "bash /start.sh"]
 
   webase-sign:
     image: webasepro/webase-sign:v1.5.5
@@ -89,7 +89,7 @@ services:
     depends_on:
       - mysql
     # entrypoint: ["/wait-for-it.sh", "mysql:3306", "--timeout=5", "--strict", "--", "bash", "/start.sh"]
-    entrypoint: ["bash", "-c", "sleep 5s; /start.sh"]
+    entrypoint: ["sh", "-c", "bash /start.sh"]
 
   webase-web:
     image: richzhao/fisco-bcos-console:v1.5.5
@@ -111,7 +111,7 @@ services:
     depends_on:
       - webase-node-mgr
     # entrypoint: ["/wait-for-it.sh", "webase-node-mgr:5001", "--timeout=30", "--", "bash", "/start.sh"]
-    entrypoint: ["bash", "-c", "sleep 3s; /start.sh"]
+    entrypoint: ["sh", "-c", "bash /start.sh"]
 
   mysql:
     image: mysql:5.7

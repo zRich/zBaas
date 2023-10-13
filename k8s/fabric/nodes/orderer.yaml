@@ -1,0 +1,141 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: orderer-config
+  namespace: fabric
+data:
+  FABRIC_LOGGING_SPEC: INFO
+  ORDERER_GENERAL_LISTENADDRESS: 0.0.0.0
+  ORDERER_GENERAL_LISTENPORT: "7050"
+  ORDERER_GENERAL_LOCALMSPID: OrdererMSP
+  ORDERER_GENERAL_LOCALMSPDIR: /var/hyperledger/fabric/organizations/ordererOrganizations/orderer.fabric.svc.cluster.local/orderers/orderer.fabric.svc.cluster.local/msp/
+  ORDERER_GENERAL_TLS_ENABLED: "true"
+  ORDERER_GENERAL_TLS_PRIVATEKEY: /var/hyperledger/fabric/organizations/ordererOrganizations/orderer.fabric.svc.cluster.local/orderers/orderer.fabric.svc.cluster.local/tls/server.key
+  ORDERER_GENERAL_TLS_CERTIFICATE: /var/hyperledger/fabric/organizations/ordererOrganizations/orderer.fabric.svc.cluster.local/orderers/orderer.fabric.svc.cluster.local/tls/server.crt
+  ORDERER_GENERAL_TLS_ROOTCAS: /var/hyperledger/fabric/organizations/ordererOrganizations/orderer.fabric.svc.cluster.local/orderers/orderer.fabric.svc.cluster.local/tls/ca.crt
+  ORDERER_GENERAL_CLUSTER_CLIENTCERTIFICATE: /var/hyperledger/fabric/organizations/ordererOrganizations/orderer.fabric.svc.cluster.local/orderers/orderer.fabric.svc.cluster.local/tls/server.crt
+  ORDERER_GENERAL_CLUSTER_CLIENTPRIVATEKEY: /var/hyperledger/fabric/organizations/ordererOrganizations/orderer.fabric.svc.cluster.local/orderers/orderer.fabric.svc.cluster.local/tls/server.key
+  ORDERER_GENERAL_CLUSTER_ROOTCAS: /var/hyperledger/fabric/organizations/ordererOrganizations/orderer.fabric.svc.cluster.local/orderers/orderer.fabric.svc.cluster.local/tls/ca.crt
+  ORDERER_GENERAL_BOOTSTRAPMETHOD: none
+  ORDERER_CHANNELPARTICIPATION_ENABLED: "true"
+  ORDERER_ADMIN_TLS_ENABLED: "true"
+  ORDERER_ADMIN_TLS_CERTIFICATE: /var/hyperledger/fabric/organizations/ordererOrganizations/orderer.fabric.svc.cluster.local/orderers/orderer.fabric.svc.cluster.local/tls/server.crt
+  ORDERER_ADMIN_TLS_PRIVATEKEY: /var/hyperledger/fabric/organizations/ordererOrganizations/orderer.fabric.svc.cluster.local/orderers/orderer.fabric.svc.cluster.local/tls/server.key
+  ORDERER_ADMIN_TLS_ROOTCAS: /var/hyperledger/fabric/organizations/ordererOrganizations/orderer.fabric.svc.cluster.local/orderers/orderer.fabric.svc.cluster.local/tls/ca.crt
+  ORDERER_ADMIN_TLS_CLIENTROOTCAS: /var/hyperledger/fabric/organizations/ordererOrganizations/orderer.fabric.svc.cluster.local/orderers/orderer.fabric.svc.cluster.local/tls/ca.crt
+  ORDERER_ADMIN_LISTENADDRESS: 0.0.0.0:7053
+  ORDERER_OPERATIONS_LISTENADDRESS: 0.0.0.0:9443
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: orderer
+  namespace: fabric
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: orderer
+  template:
+    metadata:
+      labels:
+        app: orderer
+    spec:
+      containers:
+        - name: orderer
+          image: hyperledger/fabric-orderer:2.4.1
+          imagePullPolicy: IfNotPresent
+          command: ["orderer"]
+          # command: ["sh", "-c", "sleep 48h"]
+          envFrom:
+            - configMapRef:
+                name: orderer-config
+          ports:
+            - containerPort: 7050
+            - containerPort: 7053
+            - containerPort: 9443
+          volumeMounts:
+            - name: fabric-volume
+              mountPath: /var/hyperledger/fabric
+            - name: fabric-config-volume
+              mountPath: /var/hyperledger/fabric/config
+            - name: fabric-orderer-volume
+              mountPath: /var/hyperledger/production/orderer
+      volumes:
+        - name: fabric-volume
+          persistentVolumeClaim:
+            claimName: fabric-pvc
+        - name: fabric-orderer-volume
+          persistentVolumeClaim:
+            claimName: fabric-orderer-pvc
+        - name: fabric-config-volume
+          configMap:
+            name: fabric-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: orderer
+  namespace: fabric
+spec:
+  type: ClusterIP
+  selector:
+    app: orderer
+  ports:
+    - name: general
+      port: 7050
+      protocol: TCP
+    - name: operations
+      port: 7053
+      protocol: TCP
+    - name: admin
+      port: 9443
+      protocol: TCP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: 60s
+    nginx.ingress.kubernetes.io/ssl-passthrough: "true"
+  labels:
+    app: orderer
+  name: orderer
+  namespace: fabric
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: orderer.fabric.svc.cluster.local
+      http:
+        paths:
+          - backend:
+              service:
+                name: orderer
+                port:
+                  name: general
+            path: /
+            pathType: ImplementationSpecific
+    - host: orderer.fabric.svc.cluster.local
+      http:
+        paths:
+          - backend:
+              service:
+                name: orderer
+                port:
+                  name: admin
+            path: /
+            pathType: ImplementationSpecific
+    - host: orderer.fabric.svc.cluster.local
+      http:
+        paths:
+          - backend:
+              service:
+                name: orderer
+                port:
+                  name: operations
+            path: /
+            pathType: ImplementationSpecific
+  tls:
+    - hosts:
+        - orderer.fabric.svc.cluster.local

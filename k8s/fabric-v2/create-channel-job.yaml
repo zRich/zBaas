@@ -1,0 +1,43 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: artifacts
+  namespace: fabric
+spec:
+  template:
+    spec:
+      containers:
+        - name: artifacts
+          image: hyperledger/fabric-tools:2.4.1
+          workingDir: /
+          volumeMounts:
+            - mountPath: /organizations
+              name: fabric-ca-volume
+              subPath: organizations
+            - mountPath: /configtx
+              name: fabric-config-volume
+            - mountPath: /system-genesis-block
+              name: fabric-ca-volume
+              subPath: system-genesis-block
+            - mountPath: /channel-artifacts
+              name: fabric-ca-volume
+              subPath: channel-artifacts
+            - mountPath: /scripts
+              name: fabric-scripts-volume
+          command:
+            - /bin/bash
+            - -c
+            - |
+              bash ./scripts/createGenesis.sh &&
+              bash ./scripts/createChannel.sh
+      restartPolicy: Never
+      volumes:
+        - name: fabric-ca-volume
+          persistentVolumeClaim:
+            claimName: fabric-ca-pvc
+        - name: fabric-scripts-volume
+          configMap:
+            name: fabric-scripts-cm
+        - name: fabric-config-volume
+          configMap:
+            name: fabric-config-cm

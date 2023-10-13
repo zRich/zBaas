@@ -1,0 +1,75 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ca-org1
+  namespace: fabric
+spec:
+  selector:
+    matchLabels:
+      app: ca-org1
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: ca-org1
+    spec:
+      volumes:
+        - name: fabric-ca-volume
+          persistentVolumeClaim:
+            claimName: fabric-ca-pvc
+        - name: fabric-ca-config-volume
+          configMap:
+            name: fabric-ca-config-cm
+      containers:
+        - name: ca-org1
+          image: hyperledger/fabric-ca:1.5.7
+          imagePullPolicy: "Always"
+          command:
+            [
+              "fabric-ca-server",
+              "start",
+              "-b",
+              "admin:adminpw",
+              "--port",
+              "7054",
+              "-d",
+            ]
+          resources:
+            requests:
+              memory: "300Mi"
+              cpu: "250m"
+            limits:
+              memory: "400Mi"
+              cpu: "350m"
+          env:
+            - name: FABRIC_CA_SERVER_CA_NAME
+              value: ca-org1
+            - name: FABRIC_CA_SERVER_TLS_ENABLED
+              value: "true"
+            - name: FABRIC_CA_SERVER_CSR_CN
+              value: "ca-org1"
+            - name: FABRIC_CA_SERVER_CSR_HOSTS
+              value: "ca-org1"
+          volumeMounts:
+            - name: fabric-ca-volume
+              mountPath: /etc/hyperledger/fabric-ca-server
+              subPath: organizations/fabric-ca/org1
+            - name: fabric-ca-config-volume
+              mountPath: /etc/hyperledger/fabric-ca-server/fabric-ca-server-config.yaml
+              subPath: org1-config.yaml
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ca-org1
+  namespace: fabric
+  labels:
+    app: ca-org1
+spec:
+  type: ClusterIP
+  selector:
+    app: ca-org1
+  ports:
+    - protocol: TCP
+      targetPort: 7054
+      port: 7054

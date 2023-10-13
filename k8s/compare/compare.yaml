@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: blockchain-compare
+  namespace: chainmaker
+spec:
+  selector:
+    matchLabels:
+      name: blockchain-compare
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        name: blockchain-compare
+    spec:
+      containers:
+        - name: blockchain-compare
+          image: richzhao/blockchain-compare:v1.0.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+          resources:
+            limits:
+              memory: "300Mi"
+              cpu: "300m"
+            requests:
+              memory: "200Mi"
+              cpu: "200m"
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: blockchain-compare
+  namespace: chainmaker
+  labels:
+    app: blockchain-compare
+spec:
+  selector:
+    name: blockchain-compare
+  type: NodePort
+  ports:
+    - name: http
+      port: 80
+      protocol: TCP
+      targetPort: 80
+      nodePort: 30180

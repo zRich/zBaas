@@ -43,23 +43,23 @@ spec:
         app: orderer
     spec:
       containers:
-      - name: orderer
-        image: hyperledger/fabric-orderer:2.4.1
-        imagePullPolicy: IfNotPresent
-        # command: ["orderer"]
-        command: ["sh", "-c", "sleep 48h"]
-        envFrom:
-          - configMapRef:
-              name: orderer-config
-        ports:
+        - name: orderer
+          image: hyperledger/fabric-orderer:2.4.1
+          imagePullPolicy: IfNotPresent
+          command: ["orderer"]
+          # command: ["sh", "-c", "sleep 48h"]
+          envFrom:
+            - configMapRef:
+                name: orderer-config
+          ports:
             - containerPort: 7050
             - containerPort: 7053
             - containerPort: 9443
-        volumeMounts:
-          - name: fabric-volume
-            mountPath: /var/hyperledger/fabric
-          - name: fabric-orderer
-            mountPath: /var/hyperledger/production/orderer
+          volumeMounts:
+            - name: fabric-volume
+              mountPath: /var/hyperledger/fabric
+            - name: fabric-orderer
+              mountPath: /var/hyperledger/production/orderer
       volumes:
         - name: fabric-volume
           persistentVolumeClaim:
@@ -120,4 +120,4 @@ spec:
                 port:
                   name: admin
             path: /
-            pathType: ImplementationSpecific      
+            pathType: ImplementationSpecific

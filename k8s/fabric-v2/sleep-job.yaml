@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sleep
+  namespace: fabric
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sleep
+  template:
+    metadata:
+      labels:
+        app: sleep
+    spec:
+      containers:
+        - name: sleep
+          image: busybox:1.28
+          workingDir: /
+          volumeMounts:
+            - mountPath: /organizations
+              name: fabric-ca-volume
+              subPath: organizations
+            - mountPath: /configtx
+              name: fabric-config-volume
+            - mountPath: /system-genesis-block
+              name: fabric-ca-volume
+              subPath: system-genesis-block
+            - mountPath: /channel-artifacts
+              name: fabric-ca-volume
+              subPath: channel-artifacts
+            - mountPath: /scripts
+              name: fabric-scripts-volume
+          command:
+            - sh
+            - -c
+            - |
+              sleep 48h
+      restartPolicy: Always
+      volumes:
+        - name: fabric-ca-volume
+          persistentVolumeClaim:
+            claimName: fabric-ca-pvc
+        - name: fabric-scripts-volume
+          configMap:
+            name: fabric-scripts-cm
+        - name: fabric-config-volume
+          configMap:
+            name: fabric-config-cm

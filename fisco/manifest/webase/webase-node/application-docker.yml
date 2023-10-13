@@ -7,14 +7,12 @@ server:
   servlet:
     context-path: /WeBASE-Node-Manager
 
-
 #mybatis config
 mybatis:
   configuration:
     map-underscore-to-camel-case: true
   typeAliasesPackage: com.webank.webase.node.mgr
   mapperLocations: classpath:mapper/*.xml
-
 
 # database connection configuration
 spring:
@@ -36,7 +34,7 @@ spring:
 logging:
   config: classpath:log/log4j2.xml
   level:
-    com.webank.webase.node.mgr: info
+    com.webank.webase.node.mgr: debug
 
 #constants
 constant:

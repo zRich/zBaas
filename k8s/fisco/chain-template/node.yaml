@@ -14,309 +14,316 @@ spec:
         app: chainname
     spec:
       initContainers:
-      - name: init-node
-        image: richzhao/fisco-boost:v2.9.1
-        workingDir: /fisco
-        volumeMounts:
-        - name: node-volume
-          mountPath: /fisco/nodes
-        command: ["sh", "-c", "rm -rf nodes/nodes && ./build_chain.sh -e ./fisco-bcos -l 127.0.0.1:4 -p 30300,20200,8545 -o nodes/nodes"]
-      - name: mysql-init
-        image: busybox:1.28
-        env:
-        - name: WEBASE_DB_UNAME
-          valueFrom:
-            configMapKeyRef:
-              name: chainname-webase-config-cm
-              key: mysql.user
-        - name: WEBASE_DB_PWD
-          valueFrom:
-            configMapKeyRef:
-              name: chainname-webase-config-cm
-              key: mysql.password
-        - name: WEBASE_SIGN_DB_UNAME
-          valueFrom:
-            configMapKeyRef:
-              name: chainname-webase-config-cm
-              key: sign.mysql.user
-        - name: WEBASE_SIGN_DB_PWD
-          valueFrom:
-            configMapKeyRef:
-              name: chainname-webase-config-cm
-              key: sign.mysql.password
-        command:
-        - sh
-        - "-c"
-        - |
-          set -ex
-          rm -fr /var/lib/mysql/lost+found
-          cat > /docker-entrypoint-initdb.d/mysql-webase-init.sql <<EOF
-          GRANT ALL PRIVILEGES ON *.* TO '$WEBASE_DB_UNAME'@'%' IDENTIFIED BY '$WEBASE_DB_PWD' WITH GRANT OPTION;
-          GRANT ALL PRIVILEGES ON *.* TO '$WEBASE_SIGN_DB_UNAME'@'%' IDENTIFIED BY '$WEBASE_SIGN_DB_PWD' WITH GRANT OPTION;
-          FLUSH PRIVILEGES;
-          EOF
-        volumeMounts:
-        - name: mysql-volume
-          mountPath: /var/lib/mysql
-        - name: mysql-initdb
-          mountPath: /docker-entrypoint-initdb.d
+        - name: init-node
+          image: richzhao/fisco-boost:v2.9.1
+          workingDir: /fisco
+          volumeMounts:
+            - name: node-volume
+              mountPath: /fisco/nodes
+          command:
+            [
+              "sh",
+              "-c",
+              "rm -rf nodes/nodes && ./build_chain.sh -e ./fisco-bcos -l 127.0.0.1:4 -p 30300,20200,8545 -o nodes/nodes",
+            ]
+        - name: mysql-init
+          image: busybox:1.28
+          env:
+            - name: WEBASE_DB_UNAME
+              valueFrom:
+                configMapKeyRef:
+                  name: chainname-webase-config-cm
+                  key: mysql.user
+            - name: WEBASE_DB_PWD
+              valueFrom:
+                configMapKeyRef:
+                  name: chainname-webase-config-cm
+                  key: mysql.password
+            - name: WEBASE_SIGN_DB_UNAME
+              valueFrom:
+                configMapKeyRef:
+                  name: chainname-webase-config-cm
+                  key: sign.mysql.user
+            - name: WEBASE_SIGN_DB_PWD
+              valueFrom:
+                configMapKeyRef:
+                  name: chainname-webase-config-cm
+                  key: sign.mysql.password
+          command:
+            - sh
+            - "-c"
+            - |
+              set -ex
+              rm -fr /var/lib/mysql/lost+found
+              cat > /docker-entrypoint-initdb.d/mysql-webase-init.sql <<EOF
+              GRANT ALL PRIVILEGES ON *.* TO '$WEBASE_DB_UNAME'@'%' IDENTIFIED BY '$WEBASE_DB_PWD' WITH GRANT OPTION;
+              GRANT ALL PRIVILEGES ON *.* TO '$WEBASE_SIGN_DB_UNAME'@'%' IDENTIFIED BY '$WEBASE_SIGN_DB_PWD' WITH GRANT OPTION;
+              FLUSH PRIVILEGES;
+              EOF
+          volumeMounts:
+            - name: mysql-volume
+              mountPath: /var/lib/mysql
+            - name: mysql-initdb
+              mountPath: /docker-entrypoint-initdb.d
       containers:
-      - name: chainname-node
-        image: "richzhao/fisco-boost:v2.9.1"
-        imagePullPolicy: IfNotPresent
-        # 设置工作目录为 /fisco 
-        workingDir: /fisco/nodes
-        command: ["sh", "-c", "/fisco/nodes/127.0.0.1/start_all.sh && tail -f /dev/null"]
-        ports:
-        - name: p2p-port-1
-          containerPort: 30300
-        - name: channel-port-1
-          containerPort: 20200
-        - name: jsonrpc-port-1
-          containerPort: 8545
-        - name: p2p-port-2
-          containerPort: 30301
-        - name: channel-port-2
-          containerPort: 20201
-        - name: jsonrpc-port-2
-          containerPort: 8546
-        - name: p2p-port-3
-          containerPort: 30302
-        - name: channel-port-3
-          containerPort: 20202
-        - name: jsonrpc-port-3
-          containerPort: 8547
-        - name: p2p-port-4
-          containerPort: 30303
-        - name: channel-port-4
-          containerPort: 20203
-        - name: jsonrpc-port-4
-          containerPort: 8548
-        volumeMounts:
-        - name: node-volume
-          mountPath: /fisco/nodes
-          subPath: nodes
-      - name: chainname-mysql
-        image: mysql:5.7
-        imagePullPolicy: IfNotPresent
-        args:
-        - "--character-set-server=utf8mb4"
-        - "--collation-server=utf8mb4_unicode_ci"
-        - "--max_allowed_packet=200M"
-        volumeMounts:
-        - name: mysql-volume
-          mountPath: /var/lib/mysql
-        - name: mysql-initdb
-          mountPath: /docker-entrypoint-initdb.d
-        ports:
-        - containerPort: 3306
-        env:
-        - name: MYSQL_ROOT_PASSWORD
-          valueFrom:
-            configMapKeyRef:
-              name: chainname-webase-config-cm
-              key: mysql.root.password
-      - name: chainname-webase-node-mgr
-        image: webasepro/webase-node-mgr:v1.5.5
-        env:
-        - name: SPRING_PROFILES_ACTIVE
-          value: "docker"
-        - name: WEBASE_SIGN_PORT
-          # 从 webase-config configmap 中挂载配置文件 common.properties 中的 sign.port 读取
-          valueFrom:
-            configMapKeyRef:
-              name: chainname-webase-config-cm
-              key: sign.port
-        - name: SERVER_PORT
-          valueFrom:
-            configMapKeyRef:
-              name: chainname-webase-config-cm
-              key: mgr.port
-        - name: WEBASE_DB_IP
-          valueFrom:
-            configMapKeyRef:
-              name: chainname-webase-config-cm
-              key: mysql.ip
-        - name: WEBASE_DB_PORT
-          valueFrom:
-            configMapKeyRef:
-              name: chainname-webase-config-cm
-              key: mysql.port
-        - name: WEBASE_DB_NAME
-          valueFrom:
-            configMapKeyRef:
-              name: chainname-webase-config-cm
-              key: mysql.database
-        - name: WEBASE_DB_UNAME
-          valueFrom:
-            configMapKeyRef:
-              name: chainname-webase-config-cm
-              key: mysql.user
-        - name: WEBASE_DB_PWD
-          valueFrom:
-            configMapKeyRef:
-              name: chainname-webase-config-cm
-              key: mysql.password
-        - name: ENCRYPT_TYPE
-          valueFrom:
-            configMapKeyRef:
-              name: chainname-webase-config-cm
-              key: encrypt.type
-        volumeMounts:
-        - name: webase-node-log-volume
-          mountPath: /dist/log
-        - name: webase-scripts-volume
-          mountPath: /wait-for-it.sh
-          subPath: wait-for-it.sh
-        - name: webase-scripts-volume
-          mountPath: /start.sh
-          subPath: mgr-start.sh
-        command: ["sh", "-c", "bash /start.sh"]
-        ports:
-        - containerPort: 5001
-      - name: chainname-webase-sign
-        image: webasepro/webase-sign:v1.5.5
-        env:
-        - name: SPRING_PROFILES_ACTIVE
-          value: "docker"
-        - name: SERVER_PORT
-          valueFrom:
-            configMapKeyRef:
-              name: chainname-webase-config-cm
-              key: sign.port
-        - name: WEBASE_DB_IP
-          valueFrom:
-            configMapKeyRef:
-              name: chainname-webase-config-cm
-              key: sign.mysql.ip
-        - name: WEBASE_DB_PORT
-          valueFrom:
-            configMapKeyRef:
-              name: chainname-webase-config-cm
-              key: sign.mysql.port
-        - name: WEBASE_DB_NAME
-          valueFrom:
-            configMapKeyRef:
-              name: chainname-webase-config-cm
-              key: sign.mysql.database
-        - name: WEBASE_DB_UNAME
-          valueFrom:
-            configMapKeyRef:
-              name: chainname-webase-config-cm
-              key: sign.mysql.user
-        - name: WEBASE_DB_PWD
-          valueFrom:
-            configMapKeyRef:
-              name: chainname-webase-config-cm
-              key: sign.mysql.password
-        volumeMounts:
-        - name: webase-scripts-volume
-          mountPath: /wait-for-it.sh
-          subPath: wait-for-it.sh
-        - name: webase-scripts-volume
-          mountPath: /start.sh
-          subPath: sign-start.sh
-        - name: webase-sign-log-volume
-          mountPath: /dist/log
-        command: ["sh", "-c", "bash /start.sh"]
-        ports:
-        - containerPort: 5004
-      - name: chainname-webase-front
-        image: webasepro/webase-front:v1.5.5
-        env:
-        - name: SPRING_PROFILES_ACTIVE
-          value: "docker"
-        - name: KEY_SERVER
-          value: "127.0.0.1:5004"
-        - name: SERVER_PORT
-          valueFrom:
-            configMapKeyRef:
-              name: chainname-webase-config-cm
-              key: front.port
-        - name: SDK_IP
-          valueFrom:
-            configMapKeyRef:
-              name: chainname-webase-config-cm
-              key: node.listenIp
-        - name: SDK_CHANNEL_PORT
-          valueFrom:
-            configMapKeyRef:
-              name: chainname-webase-config-cm
-              key: node.channelPort
-        volumeMounts:
-        - name: webase-scripts-volume
-          mountPath: /wait-for-it.sh
-          subPath: wait-for-it.sh
-        - name: webase-scripts-volume
-          mountPath: /start.sh
-          subPath: front-start.sh
-        - name: webase-front-log-volume
-          mountPath: /dist/log
-        - name: webase-front-h2-volume
-          mountPath: /h2
-        - name: node-volume
-          mountPath: /dist/sdk
-          subPath: nodes/127.0.0.1/sdk
-        command: ["sh", "-c", "bash /start.sh"]
-        ports:
-        - containerPort: 5002
-      - name: chainname-webase-web
-        image: richzhao/fisco-bcos-console:v1.5.5
-        volumeMounts:
-        - name: webase-scripts-volume
-          mountPath: /wait-for-it.sh
-          subPath: wait-for-it.sh
-        - name: webase-scripts-volume
-          mountPath: /start.sh
-          subPath: web-start.sh
-        - name: webase-web-log-volume
-          mountPath: /dist/log
-        - name: webase-nginx-log-volume
-          mountPath: /usr/share/nginx/log
-        command: ["sh", "-c", "bash /start.sh"]
-        ports:
-        - containerPort: 5000
+        - name: chainname-node
+          image: "richzhao/fisco-boost:v2.9.1"
+          imagePullPolicy: IfNotPresent
+          # 设置工作目录为 /fisco
+          workingDir: /fisco/nodes
+          command:
+            [
+              "sh",
+              "-c",
+              "/fisco/nodes/127.0.0.1/start_all.sh && tail -f /dev/null",
+            ]
+          ports:
+            - name: p2p-port-1
+              containerPort: 30300
+            - name: channel-port-1
+              containerPort: 20200
+            - name: jsonrpc-port-1
+              containerPort: 8545
+            - name: p2p-port-2
+              containerPort: 30301
+            - name: channel-port-2
+              containerPort: 20201
+            - name: jsonrpc-port-2
+              containerPort: 8546
+            - name: p2p-port-3
+              containerPort: 30302
+            - name: channel-port-3
+              containerPort: 20202
+            - name: jsonrpc-port-3
+              containerPort: 8547
+            - name: p2p-port-4
+              containerPort: 30303
+            - name: channel-port-4
+              containerPort: 20203
+            - name: jsonrpc-port-4
+              containerPort: 8548
+          volumeMounts:
+            - name: node-volume
+              mountPath: /fisco/nodes
+              subPath: nodes
+        - name: chainname-mysql
+          image: mysql:5.7
+          imagePullPolicy: IfNotPresent
+          args:
+            - "--character-set-server=utf8mb4"
+            - "--collation-server=utf8mb4_unicode_ci"
+            - "--max_allowed_packet=200M"
+          volumeMounts:
+            - name: mysql-volume
+              mountPath: /var/lib/mysql
+            - name: mysql-initdb
+              mountPath: /docker-entrypoint-initdb.d
+          ports:
+            - containerPort: 3306
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                configMapKeyRef:
+                  name: chainname-webase-config-cm
+                  key: mysql.root.password
+        - name: chainname-webase-node-mgr
+          image: webasepro/webase-node-mgr:v1.5.5
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: "docker"
+            - name: WEBASE_SIGN_PORT
+              # 从 webase-config configmap 中挂载配置文件 common.properties 中的 sign.port 读取
+              valueFrom:
+                configMapKeyRef:
+                  name: chainname-webase-config-cm
+                  key: sign.port
+            - name: SERVER_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: chainname-webase-config-cm
+                  key: mgr.port
+            - name: WEBASE_DB_IP
+              valueFrom:
+                configMapKeyRef:
+                  name: chainname-webase-config-cm
+                  key: mysql.ip
+            - name: WEBASE_DB_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: chainname-webase-config-cm
+                  key: mysql.port
+            - name: WEBASE_DB_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: chainname-webase-config-cm
+                  key: mysql.database
+            - name: WEBASE_DB_UNAME
+              valueFrom:
+                configMapKeyRef:
+                  name: chainname-webase-config-cm
+                  key: mysql.user
+            - name: WEBASE_DB_PWD
+              valueFrom:
+                configMapKeyRef:
+                  name: chainname-webase-config-cm
+                  key: mysql.password
+            - name: ENCRYPT_TYPE
+              valueFrom:
+                configMapKeyRef:
+                  name: chainname-webase-config-cm
+                  key: encrypt.type
+          volumeMounts:
+            - name: webase-node-log-volume
+              mountPath: /dist/log
+            - name: webase-scripts-volume
+              mountPath: /wait-for-it.sh
+              subPath: wait-for-it.sh
+            - name: webase-scripts-volume
+              mountPath: /start.sh
+              subPath: mgr-start.sh
+          command: ["sh", "-c", "bash /start.sh"]
+          ports:
+            - containerPort: 5001
+        - name: chainname-webase-sign
+          image: webasepro/webase-sign:v1.5.5
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: "docker"
+            - name: SERVER_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: chainname-webase-config-cm
+                  key: sign.port
+            - name: WEBASE_DB_IP
+              valueFrom:
+                configMapKeyRef:
+                  name: chainname-webase-config-cm
+                  key: sign.mysql.ip
+            - name: WEBASE_DB_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: chainname-webase-config-cm
+                  key: sign.mysql.port
+            - name: WEBASE_DB_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: chainname-webase-config-cm
+                  key: sign.mysql.database
+            - name: WEBASE_DB_UNAME
+              valueFrom:
+                configMapKeyRef:
+                  name: chainname-webase-config-cm
+                  key: sign.mysql.user
+            - name: WEBASE_DB_PWD
+              valueFrom:
+                configMapKeyRef:
+                  name: chainname-webase-config-cm
+                  key: sign.mysql.password
+          volumeMounts:
+            - name: webase-scripts-volume
+              mountPath: /wait-for-it.sh
+              subPath: wait-for-it.sh
+            - name: webase-scripts-volume
+              mountPath: /start.sh
+              subPath: sign-start.sh
+            - name: webase-sign-log-volume
+              mountPath: /dist/log
+          command: ["sh", "-c", "bash /start.sh"]
+          ports:
+            - containerPort: 5004
+        - name: chainname-webase-front
+          image: webasepro/webase-front:v1.5.5
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: "docker"
+            - name: KEY_SERVER
+              value: "127.0.0.1:5004"
+            - name: SERVER_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: chainname-webase-config-cm
+                  key: front.port
+            - name: SDK_IP
+              valueFrom:
+                configMapKeyRef:
+                  name: chainname-webase-config-cm
+                  key: node.listenIp
+            - name: SDK_CHANNEL_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: chainname-webase-config-cm
+                  key: node.channelPort
+          volumeMounts:
+            - name: webase-scripts-volume
+              mountPath: /wait-for-it.sh
+              subPath: wait-for-it.sh
+            - name: webase-scripts-volume
+              mountPath: /start.sh
+              subPath: front-start.sh
+            - name: webase-front-log-volume
+              mountPath: /dist/log
+            - name: webase-front-h2-volume
+              mountPath: /h2
+            - name: node-volume
+              mountPath: /dist/sdk
+              subPath: nodes/127.0.0.1/sdk
+          command: ["sh", "-c", "bash /start.sh"]
+          ports:
+            - containerPort: 5002
+        - name: chainname-webase-web
+          image: richzhao/fisco-bcos-console:v1.5.5
+          volumeMounts:
+            - name: webase-scripts-volume
+              mountPath: /wait-for-it.sh
+              subPath: wait-for-it.sh
+            - name: webase-scripts-volume
+              mountPath: /start.sh
+              subPath: web-start.sh
+            - name: webase-web-log-volume
+              mountPath: /dist/log
+            - name: webase-nginx-log-volume
+              mountPath: /usr/share/nginx/log
+          command: ["sh", "-c", "bash /start.sh"]
+          ports:
+            - containerPort: 5000
       volumes:
-      # 节点数据目录
-      - name: node-volume
-        persistentVolumeClaim:
-          claimName: chainname-node-pvc
-      # mysql 数据目录
-      - name: mysql-volume
-        persistentVolumeClaim:
-          claimName: chainname-mysql-pvc
-      - name: mysql-initdb
-        emptyDir: {}
-      - name: webase-config-volume
-        configMap:
-          name: chainname-webase-config-cm
-      # 从 webase-scripts configmap 中挂载配置文件
-      - name: webase-scripts-volume
-        configMap:
-          name: webase-scripts-cm
-      # webase-node-mgr 配置文件
-      - name: webase-node-config-volume
-        configMap:
-          name: webase-node-config-cm
-      - name: webase-node-log-volume
-        persistentVolumeClaim:
-          claimName: chainname-webase-node-log-pvc
-      # webase-node-mgr 配置文件
-      - name: webase-sign-log-volume
-        persistentVolumeClaim:
-          claimName: chainname-webase-sign-log-pvc
-      - name: webase-front-log-volume
-        persistentVolumeClaim:
-          claimName: chainname-webase-front-log-pvc
-      - name: webase-front-h2-volume
-        persistentVolumeClaim:
-          claimName: chainname-webase-front-h2-pvc
-      - name: webase-web-log-volume
-        persistentVolumeClaim:
-          claimName: chainname-webase-web-log-pvc
-      - name: webase-nginx-log-volume
-        persistentVolumeClaim:
-          claimName: chainname-webase-nginx-log-pvc
+        # 节点数据目录
+        - name: node-volume
+          persistentVolumeClaim:
+            claimName: chainname-node-pvc
+        # mysql 数据目录
+        - name: mysql-volume
+          persistentVolumeClaim:
+            claimName: chainname-mysql-pvc
+        - name: mysql-initdb
+          emptyDir: {}
+        - name: webase-config-volume
+          configMap:
+            name: chainname-webase-config-cm
+        # 从 webase-scripts configmap 中挂载配置文件
+        - name: webase-scripts-volume
+          configMap:
+            name: webase-scripts-cm
+        # webase-node-mgr 配置文件
+        - name: webase-node-log-volume
+          persistentVolumeClaim:
+            claimName: chainname-webase-node-log-pvc
+        # webase-node-mgr 配置文件
+        - name: webase-sign-log-volume
+          persistentVolumeClaim:
+            claimName: chainname-webase-sign-log-pvc
+        - name: webase-front-log-volume
+          persistentVolumeClaim:
+            claimName: chainname-webase-front-log-pvc
+        - name: webase-front-h2-volume
+          persistentVolumeClaim:
+            claimName: chainname-webase-front-h2-pvc
+        - name: webase-web-log-volume
+          persistentVolumeClaim:
+            claimName: chainname-webase-web-log-pvc
+        - name: webase-nginx-log-volume
+          persistentVolumeClaim:
+            claimName: chainname-webase-nginx-log-pvc
 ---
 apiVersion: v1
 kind: Service
@@ -330,10 +337,10 @@ spec:
   selector:
     app: chainname
   ports:
-  - name: http
-    port: 5000
-    targetPort: 5000
-    protocol: TCP
+    - name: http
+      port: 5000
+      targetPort: 5000
+      protocol: TCP
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -348,13 +355,13 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-  - host: chainname.richzhao.com
-    http:
-      paths:
-      - backend:
-          service:
-            name: chainname-console-svc
-            port:
-              name: http
-        path: /
-        pathType: ImplementationSpecific
+    - host: chainname.richzhao.com
+      http:
+        paths:
+          - backend:
+              service:
+                name: chainname-console-svc
+                port:
+                  name: http
+            path: /
+            pathType: ImplementationSpecific
