@@ -9,11 +9,11 @@ spec:
   accessModes:
     - ReadWriteMany
   capacity:
-    storage: 20Gi
+    storage: "60"
   mountOptions: []
   nfs:
     path: /srv/nfs4/k8s/chainmaker
-    server: 192.168.50.204
+    server: 192.168.50.200
   persistentVolumeReclaimPolicy: Retain
   storageClassName: nfs-storageclass-provisioner
   volumeMode: Filesystem
@@ -31,7 +31,7 @@ spec:
     - ReadWriteMany
   resources:
     requests:
-      storage: 20Gi
+      storage: "60"
   storageClassName: nfs-storageclass-provisioner
   volumeMode: Filesystem
   volumeName: nfs-pv-nfs-sc
@@ -50,7 +50,7 @@ metadata:
   name: eip-nfs-client-provisioner-runner
 rules:
   - apiGroups:
-      - ''
+      - ""
     resources:
       - nodes
     verbs:
@@ -58,7 +58,7 @@ rules:
       - list
       - watch
   - apiGroups:
-      - ''
+      - ""
     resources:
       - persistentvolumes
     verbs:
@@ -68,7 +68,7 @@ rules:
       - create
       - delete
   - apiGroups:
-      - ''
+      - ""
     resources:
       - persistentvolumeclaims
     verbs:
@@ -85,7 +85,7 @@ rules:
       - list
       - watch
   - apiGroups:
-      - ''
+      - ""
     resources:
       - events
     verbs:
@@ -115,7 +115,7 @@ metadata:
   namespace: kube-system
 rules:
   - apiGroups:
-      - ''
+      - ""
     resources:
       - endpoints
     verbs:
@@ -166,7 +166,7 @@ spec:
             - name: PROVISIONER_NAME
               value: nfs-nfs-sc
             - name: NFS_SERVER
-              value: 192.168.50.204
+              value: 192.168.50.200
             - name: NFS_PATH
               value: /srv/nfs4/k8s/chainmaker
           image: >-
@@ -187,12 +187,11 @@ kind: StorageClass
 metadata:
   annotations:
     k8s.kuboard.cn/storageType: nfs_client_provisioner
-    storageclass.kubernetes.io/is-default-class: 'true'
+    storageclass.kubernetes.io/is-default-class: "true"
   name: nfs-sc
 mountOptions: []
 parameters:
-  archiveOnDelete: 'false'
+  archiveOnDelete: "false"
 provisioner: nfs-nfs-sc
-reclaimPolicy: Retain
-volumeBindingMode: Immediate
-
+reclaimPolicy: Delete
+volumeBindingMode: WaitForFirstConsumer
