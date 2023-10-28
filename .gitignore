@@ -8,3 +8,5 @@
 
 # 所有任何以group1命名的文件夹下
 **/group1/**
+
+k8s/images
