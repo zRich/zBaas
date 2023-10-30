@@ -1,0 +1,35 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: chainmaker-console-role
+  namespace: chainmaker
+  annotations:
+    iam.kubesphere.io/aggregation-roles: '["role-template-view-members","role-template-manage-members",
+      "role-template-view-roles","role-template-manage-roles", "role-template-view-app-workloads","role-template-manage-app-workloads",
+      "role-template-view-volumes","role-template-manage-volumes", "role-template-view-snapshots","role-template-manage-snapshots",
+      "role-template-view-secrets","role-template-manage-secrets", "role-template-view-serviceaccount","role-template-manage-serviceaccount",
+      "role-template-view-configmaps","role-template-manage-configmaps", "role-template-view-alerting-policies","role-template-manage-alerting-policies",
+      "role-template-view-alerting-messages", "role-template-view-custom-monitoring","role-template-manage-custom-monitoring",
+      "role-template-view-pipelines","role-template-manage-pipelines", "role-template-view-pipelineruns","role-template-manage-pipelineruns",
+      "role-template-view-credentials","role-template-manage-credentials", "role-template-view-gitrepositories","role-template-manage-gitrepositories",
+      "role-template-view-gitops-applications","role-template-manage-gitops-applications",
+      "role-template-manage-project-settings","role-template-manage-devops-settings"]'
+
+rules:
+- apiGroups: ["*"]
+  resources: [ "*" ]
+  verbs: [ "*"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: chainmaker-console-role-binding
+  namespace: chainmaker
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: chainmaker-console-role
+subjects:
+  - kind: ServiceAccount
+    name: default
+    namespace: chainmaker

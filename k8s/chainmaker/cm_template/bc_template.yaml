@@ -1,0 +1,119 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: bc-conf
+data:
+  bc.yml: |+
+    chain_id: chain1
+    version: "2040001"
+    sequence: 0
+    auth_type: "permissionedWithCert"
+    crypto:
+      hash: SHA256
+    contract:
+      enable_sql_support: false
+    vm:
+      addr_type: 0
+      support_list:
+        - "wasmer"
+        - "gasm"
+        - "evm"
+        - "dockergo"
+        - "wxvm"
+      native:
+          multisign:
+            enable_manual_run: true
+    block:
+      tx_timestamp_verify: true
+      tx_timeout: 600
+      block_tx_capacity: 500
+      block_size: 100
+      block_interval: 2000
+    core:
+      tx_scheduler_timeout: 10
+      tx_scheduler_validate_timeout: 10
+      enable_sender_group: false
+      enable_conflicts_bit_window: true
+    account_config:
+      enable_gas: false
+      gas_count: 0
+      default_gas: 0
+    consensus:
+      type: 1
+      nodes:
+        - org_id: "wx-org1.chainmaker.org"
+          node_id:
+            - "{node1_id}"
+        - org_id: "wx-org2.chainmaker.org"
+          node_id:
+            - "{node2_id}"
+        - org_id: "wx-org3.chainmaker.org"
+          node_id:
+            - "{node3_id}"
+        - org_id: "wx-org4.chainmaker.org"
+          node_id:
+            - "{node4_id}"
+      ext_config:
+    trust_roots:
+      - org_id: "wx-org1.chainmaker.org"
+        root:
+          - "../config/wx-org.chainmaker.org/certs/ca/wx-org1.chainmaker.org/ca.crt"
+      - org_id: "wx-org2.chainmaker.org"
+        root:
+          - "../config/wx-org.chainmaker.org/certs/ca/wx-org2.chainmaker.org/ca.crt"
+      - org_id: "wx-org3.chainmaker.org"
+        root:
+          - "../config/wx-org.chainmaker.org/certs/ca/wx-org3.chainmaker.org/ca.crt"
+      - org_id: "wx-org4.chainmaker.org"
+        root:
+          - "../config/wx-org.chainmaker.org/certs/ca/wx-org4.chainmaker.org/ca.crt"
+    resource_policies:
+      - resource_name: CHAIN_CONFIG-NODE_ID_UPDATE
+        policy:
+          rule: SELF
+          org_list:
+          role_list:
+            - admin
+      - resource_name: CHAIN_CONFIG-TRUST_ROOT_ADD
+        policy:
+          rule: ANY
+          org_list:
+          role_list:
+            - admin
+      - resource_name: CHAIN_CONFIG-TRUST_ROOT_DELETE
+        policy:
+          rule: ANY
+          org_list:
+          role_list:
+            - admin
+      - resource_name: CHAIN_CONFIG-NODE_ORG_ADD
+        policy:
+          rule: ANY
+          org_list:
+          role_list:
+            - admin
+      - resource_name: CHAIN_CONFIG-NODE_ORG_DELETE
+        policy:
+          rule: ANY
+          org_list:
+          role_list:
+            - admin
+      - resource_name: CHAIN_CONFIG-NODE_ID_ADD
+        policy:
+          rule: ANY
+          org_list:
+          role_list:
+            - admin
+      - resource_name: CHAIN_CONFIG-NODE_ID_DELETE
+        policy:
+          rule: ANY
+          org_list:
+          role_list:
+            - admin
+      - resource_name: CHAIN_CONFIG-CERTS_FREEZE
+        policy:
+          rule: ANY
+          org_list:
+          role_list:
+            - admin
+    disabled_native_contract:

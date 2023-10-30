@@ -1,0 +1,21 @@
+version: "3.9"
+
+networks:
+  console:
+    name: k8s-console
+
+services:
+  kuboard:
+    container_name: k8s-console
+    image: eipwork/kuboard:v3.5.2.6
+    restart: unless-stopped
+    environment:
+      - KUBOARD_ENDPOINT=http://192.168.50.200:80
+      - KUBOARD_AGENT_SERVER_TCP_PORT=10081
+    volumes:
+      - ./kuboard-data:/data
+    ports:
+      - "80:80/tcp"
+      - "10081:10081/tcp"
+    networks:
+      - console

@@ -1,0 +1,30 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  annotations:
+    pv.kubernetes.io/bind-completed: "yes"
+    pv.kubernetes.io/bound-by-controller: "yes"
+    volume.beta.kubernetes.io/storage-provisioner: nfs-nfs-sc
+    volume.kubernetes.io/storage-provisioner: nfs-nfs-sc
+  finalizers:
+    - kubernetes.io/pvc-protection
+  labels:
+    app: chainmaker-console
+  name: chainmaker-cert-pvc
+  namespace: chainmaker
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: nfs-sc
+  volumeMode: Filesystem
+  volumeName: pvc-0c8eb800-923b-4cd9-9a79-f859d434e53e
+status:
+  accessModes:
+    - ReadWriteMany
+  capacity:
+    storage: 1Gi
+  phase: Bound

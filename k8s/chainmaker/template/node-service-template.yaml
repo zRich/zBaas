@@ -1,0 +1,19 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name:  {orgid}-{nodename}-svc
+  namespace: chainmaker
+spec:
+  clusterIP: None
+  selector:
+    app: {orgid}-{nodename}
+  ports:
+  - protocol: TCP
+    name:  grpc
+    port:  32301
+    targetPort:  32301
+  - protocol: TCP
+    name:  p2p
+    port:  11301
+    targetPort:  11301

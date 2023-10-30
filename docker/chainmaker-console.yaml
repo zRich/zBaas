@@ -1,0 +1,73 @@
+version: '3.9'
+
+services:
+  cm_db:
+    image: mysql:5.7
+    volumes:
+      - cm-console.data:/var/lib/mysql
+    restart: always
+    ports:
+      - 3306:3306
+    environment:
+      MYSQL_ROOT_PASSWORD: Baec&chainmaker
+      MYSQL_USER: chainmaker
+      MYSQL_PASSWORD: Baec&chainmaker
+      MYSQL_DATABASE: chainmaker_dev
+    command:
+      [
+        'mysqld',
+        '--character-set-server=utf8mb4',
+        '--collation-server=utf8mb4_unicode_ci',
+        '--max_allowed_packet=200M',
+      ]
+    networks:
+      - chainmaker-console
+
+  pma:
+    image: phpmyadmin:5.2.1
+    restart: always
+    environment:
+      PMA_HOST: cm_db
+      PMA_PORT: 3306
+      MYSQL_ROOT_PASSWORD: Baec&chainmaker
+      # PMA_ARBITRARY: 1
+    ports:
+      - 8080:80
+    depends_on:
+      - cm_db
+    networks:
+      - chainmaker-console
+
+  chainmaker-console:
+    depends_on:
+      - cm_db
+    image: richzhao/chainmaker-console:v2.3.1
+    volumes:
+      - cm-cert-path:/chainmaker/cert/
+    ports:
+      - '9999:9999'
+    restart: always
+    networks:
+      - chainmaker-console
+
+  chainmaker-console-web:
+    depends_on:
+      - chainmaker-console
+    image: richzhao/chainmaker-console-web:v2.3.1
+    volumes:
+      - ./deploy/nginx/conf.d/default.conf:/etc/nginx/conf.d/default.conf
+    ports:
+      - '80:80'
+    restart: always
+    networks:
+      - chainmaker-console
+
+volumes:
+  cm-console.data:
+    external: true
+  cm-cert-path:
+    external: true
+
+networks:
+  chainmaker-console:
+    name: chainmaker

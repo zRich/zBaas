@@ -1,0 +1,113 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chain1-node3
+  namespace: chainmaker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: chain1-node3
+  template:
+    metadata:
+      labels:
+        app: chain1-node3
+    spec:
+      containers:
+      - name: chain1-node3
+        image: "chainmakerofficial/chainmaker:v2.3.1"
+        imagePullPolicy: IfNotPresent
+        command: ["./chainmaker"]
+        args: ["start", "-c", "/chainmaker-go/config/org3/chainmaker.yml"]
+        # command: ["sh", "-c", "sleep 48h"]
+        volumeMounts:
+          - name: chain1-node3-data-pvc
+            mountPath: /chainmaker-go/data
+          - name: chain1-node3-config-pvc
+            mountPath: /chainmaker-go/config
+          - name: chain1-node3-log-pvc
+            mountPath: /chainmaker-go/log
+      - name: docker-go-container
+        securityContext:
+          privileged: true
+        image: chainmakerofficial/chainmaker-vm-engine:v2.3.1
+        resources:
+          # limits:
+            # cpu: "4"
+            # memory: "8Gi"
+          # requests:
+            # cpu: "1"
+            # memory: "2Gi"
+        ports:
+          - containerPort: 22351
+            name: vmport
+            protocol: TCP
+        env:
+          - name: CHAIN_RPC_PROTOCOL
+            value: "1"
+          - name: CHAIN_HOST
+            value: "127.0.0.1"
+          - name: CHAIN_RPC_PORT
+            value: "22351"
+          - name: SANDBOX_RPC_PORT
+            value: "32351"
+          - name: MAX_SEND_MSG_SIZE
+            value: "100"
+          - name: MAX_RECV_MSG_SIZE
+            value: "100"
+          - name: MAX_CONN_TIMEOUT
+            value: "10"
+          - name: MAX_ORIGINAL_PROCESS_NUM
+            value: "20"
+          - name: DOCKERVM_CONTRACT_ENGINE_LOG_LEVEL
+            value: "DEBUG"
+          - name: DOCKERVM_SANDBOX_LOG_LEVEL
+            value: "DEBUG"
+          - name: DOCKERVM_LOG_IN_CONSOLE
+            value: "false"            
+      volumes:
+        - name: chain1-node3-config-pvc
+          persistentVolumeClaim:
+            claimName: chain1-node3-config-pvc
+        - name: chain1-node3-data-pvc
+          persistentVolumeClaim:
+            claimName: chain1-node3-data-pvc    
+        - name: chain1-node3-log-pvc
+          persistentVolumeClaim:
+            claimName: chain1-node3-log-pvc        
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name:  chain1-node3-svc
+  namespace: chainmaker
+spec:
+  clusterIP: None
+  selector:
+    app: chain1-node3
+  ports:
+  - protocol: TCP
+    name:  grpc
+    port:  12301
+    targetPort:  12301
+  - protocol: TCP
+    name:  p2p
+    port:  11301
+    targetPort:  11301
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: chain1-node3-grpc
+  namespace: chainmaker
+spec:
+  type: NodePort 
+  selector:
+    app: chain1-node3
+  ports:
+    - protocol: TCP
+      port: 32303
+      targetPort: 12301
+      name: grpc
+      nodePort: 32303
